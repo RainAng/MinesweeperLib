@@ -1,7 +1,6 @@
 package com.github.rainang.minesweeperlib;
 
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public final class Minesweeper
 {
@@ -375,5 +374,60 @@ public final class Minesweeper
 	public Tile getLosingTile()
 	{
 		return losingTile;
+	}
+	
+	// BOARD DATA
+	
+	public int countOpenings()
+	{
+		List<Tile> list = getTiles();
+		list.removeIf(t -> t.isMine() || t.getMineCount() > 0);
+		
+		int i = 0;
+		while (!list.isEmpty())
+		{
+			Queue<Tile> q = new LinkedList<>();
+			q.offer(list.remove(0));
+			while (!q.isEmpty())
+			{
+				Tile t = q.poll();
+				list.remove(t);
+				t.getNeighbors().stream().filter(list::contains).forEach(n ->
+				{
+					list.remove(n);
+					q.offer(n);
+				});
+			}
+			i++;
+		}
+		return i;
+	}
+	
+	public int count3BV()
+	{
+		List<Tile> list = getTiles();
+		int shores = 0;
+		for (Tile t : list)
+		{
+			if (t.isMine() || t.getMineCount() == 0)
+				continue;
+			for (Tile n : t.getNeighbors())
+				if (!n.isMine() && n.getMineCount() == 0)
+				{
+					shores++;
+					break;
+				}
+		}
+		
+		list.removeIf(t -> t.isMine() || t.getMineCount() == 0);
+		return list.size() - shores + countOpenings();
+	}
+	
+	private List<Tile> getTiles()
+	{
+		List<Tile> list = new ArrayList<>();
+		for (Tile[] ts : tiles)
+			Collections.addAll(list, ts);
+		return list;
 	}
 }

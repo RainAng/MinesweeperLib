@@ -224,6 +224,7 @@ class ConsoleDemo
 		
 		if (ms.getState() == Minesweeper.GameState.END)
 		{
+			System.out.println("\nOps=" + ms.countOpenings() + " 3BV=" + ms.count3BV());
 			System.out.print("\nGame Over!");
 			if (ms.isWon())
 				System.out.println(" YOU WIN!");
