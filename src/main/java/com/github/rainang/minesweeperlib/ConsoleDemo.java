@@ -42,8 +42,6 @@ class ConsoleDemo
 	private static final String ANSI_CYAN = "\u001B[36m";
 	private static final String ANSI_WHITE = "\u001B[37m";
 	
-	private final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-	
 	private final Minesweeper ms = new Minesweeper(new Random());
 	
 	private ConsoleDemo() throws IOException
@@ -70,7 +68,7 @@ class ConsoleDemo
 		System.out.println("type -h for list of commands\n");
 		printBoard();
 		
-		loop:
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		while (true)
 		{
 			String string = br.readLine().toLowerCase();
@@ -327,7 +325,7 @@ class ConsoleDemo
 			StringBuilder sb = new StringBuilder();
 			sb.append("    ");
 			if (command != null)
-				sb.append(command + " ");
+				sb.append(command).append(" ");
 			if (args != null)
 				for (String arg : args)
 					sb.append("<").append(arg).append("> ");

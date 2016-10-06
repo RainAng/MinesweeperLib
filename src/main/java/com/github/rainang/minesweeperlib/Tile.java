@@ -40,7 +40,7 @@ public final class Tile
 	{
 		boolean bx = x == 0 || x == minesweeper.getWidth() - 1;
 		boolean by = y == 0 || y == minesweeper.getHeight() - 1;
-		int n = bx ^ by ? 5 : bx && by ? 3 : 8;
+		int n = bx ^ by ? 5 : bx ? 3 : 8;
 		neighbors = new Tile[n];
 		
 		List<Tile> list = new ArrayList<>();

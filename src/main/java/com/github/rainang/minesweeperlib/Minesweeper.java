@@ -74,7 +74,6 @@ public final class Minesweeper
 				return;
 			case EXPERT:
 				setDifficulty(30, 16, 99);
-				return;
 		}
 	}
 	
