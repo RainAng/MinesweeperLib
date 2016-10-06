@@ -9,6 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import static com.github.rainang.minesweeperlib.Minesweeper.Difficulty.*;
 
 class ConsoleDemo
 {
@@ -19,6 +22,8 @@ class ConsoleDemo
 		if (args[0].equals("demo"))
 			new ConsoleDemo();
 	}
+	
+	private static final String WHITE_SPACE = "               ";
 	
 	private static final String BOMB = "\u25AA";
 	private static final String FLAG = "\u25A3";
@@ -37,43 +42,33 @@ class ConsoleDemo
 	private static final String ANSI_CYAN = "\u001B[36m";
 	private static final String ANSI_WHITE = "\u001B[37m";
 	
-	private static final String WHITE_SPACE = "                              ";
-	
-	private boolean auto_chord;
-	
 	private final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	
 	private final Minesweeper ms = new Minesweeper(new Random());
-	private final List<Cmd> list = new ArrayList<>();
 	
 	private ConsoleDemo() throws IOException
 	{
-		list.add(new Cmd(new String[]{"-h", "-help"}, "list commands\n", c -> listCommands()));
+		List<Command> list = new ArrayList<>();
+		list.add(new Command("-h", "list commands", c -> list.forEach(System.out::println)));
+		list.add(new Command("-p", "print board", c -> printBoard()));
 		
-		list.add(new Cmd(new String[]{"-n", "-new"}, "start new game", c -> newGame()));
-		list.add(new Cmd(new String[]{"-r", "-restart"}, "restart game", c -> restartGame()));
-		list.add(new Cmd(new String[]{"-exit"}, "exit demo\n", c -> System.exit(0)));
+		list.add(new Command("-n", "start new game", c -> newGame()));
+		list.add(new Command("-r", "restart game", c -> restartGame()));
+		list.add(new Command("-x", "exit demo", c -> System.exit(0)));
 		
-		list.add(new Cmd(new String[]{"-b", "-beginner"}, "set 9x9 board with 10 mines", c -> setDifficulty
-				(Minesweeper.Difficulty.BEGINNER)));
-		list.add(new Cmd(new String[]{"-i", "-intermediate"}, "set 16x16 board with 40 mines", c -> setDifficulty
-				(Minesweeper.Difficulty.INTERMEDIATE)));
-		list.add(new Cmd(new String[]{"-e", "-expert"}, "set 30x16 board with 99 mines", c -> setDifficulty
-				(Minesweeper.Difficulty.EXPERT)));
+		list.add(new Command("-b", "set beginner board; 9x9, 10 mines", c -> setDifficulty(BEGINNER)));
+		list.add(new Command("-i", "set intermediate board; 16x16, 40 mines", c -> setDifficulty(INTERMEDIATE)));
+		list.add(new Command("-e", "set expert board; 30x16, 99 mines", c -> setDifficulty(EXPERT)));
 		
-		list.add(new Cmd(new String[]{"-c <width> <height> <mines>"}, "", null));
-		list.add(new Cmd(new String[]{"-custom <width> <height> <mines>"}, "\n" + WHITE_SPACE + "set custom board " +
-				"size and mine count\n" + WHITE_SPACE + "width and height range is between 5 and 32\n" + WHITE_SPACE + "mine range is between 5 and (width * height - 9)\n", null));
+		String s = "\n" + WHITE_SPACE + "set custom board size and mine count";
+		list.add(new Command("-c", new String[]{"width", "height", "mines"}, s, this::setCustom));
 		
-		list.add(new Cmd(new String[]{"<x> <y>"}, "clear a tile", null));
-		list.add(new Cmd(new String[]{"<x> <y> c"}, "chord a tile", null));
-		list.add(new Cmd(new String[]{"<x> <y> f"}, "flag a tile\n", null));
-		
-		list.add(new Cmd(new String[]{"-ac", "-auto-chord"}, "toggle auto-chord on/off\n", c -> toggleChord()));
-		list.add(new Cmd(new String[]{"-p", "-print"}, "print board", c -> printBoard()));
+		list.add(new Command(new String[]{"x", "y"}, "clear/chord a tile", args -> open(args[0], args[1], false)));
+		list.add(new Command("f", new String[]{"x", "y"}, "flag a tile", args -> open(args[1], args[2], true)));
 		
 		System.out.println(ANSI_LINE + "MinesweeperLib Demo\n" + ANSI_RESET);
-		listCommands();
+		System.out.println("type -h for list of commands\n");
+		printBoard();
 		
 		loop:
 		while (true)
@@ -82,70 +77,18 @@ class ConsoleDemo
 			System.out.println();
 			String[] split = string.split(" ");
 			
-			for (Cmd c : list)
-				if (c.equals(split[0]))
+			boolean flag = false;
+			for (Command c : list)
+				if (c.execute(split))
 				{
-					c.execute(split);
-					continue loop;
+					flag = true;
+					break;
 				}
+			if (flag)
+				continue;
 			
-			if (split.length >= 2)
-			{
-				if (split[0].equals("-c") || split[0].equals("-custom"))
-				{
-					setCustom(split);
-					continue;
-				}
-				
-				int x, y;
-				
-				try
-				{
-					x = Integer.parseInt(split[0]);
-					if (x < 0 || x >= ms.getWidth())
-					{
-						System.out.println("X is out of range: " + x);
-						continue;
-					}
-					y = Integer.parseInt(split[1]);
-					if (y < 0 || y >= ms.getHeight())
-					{
-						System.out.println("Y is out of range: " + y);
-						continue;
-					}
-					
-					if (split.length == 2)
-					{
-						Tile tile = ms.getTile(x, y);
-						if (tile.isOpen())
-						{
-							if (auto_chord)
-								ms.clear(x, y, true);
-						} else
-							ms.clear(x, y, false);
-					} else
-						switch (split[2])
-						{
-							case "c":
-							case "chord":
-								ms.clear(x, y, true);
-								break;
-							case "f":
-							case "flag":
-								ms.flag(x, y);
-								break;
-						}
-					
-					printBoard();
-				} catch (NumberFormatException e)
-				{
-					System.out.println(String.format("Invalid parameters: %s", Arrays.toString(split)));
-				}
-			} else
-			{
-				System.out.println(String.format("Unknown command: %s", string));
-				System.out.println("type -h or -help for list of commands");
-			}
+			System.out.println(String.format("Unknown command: %s", string));
+			System.out.println("type -h for list of commands");
 		}
 	}
 	
@@ -185,10 +128,37 @@ class ConsoleDemo
 		}
 	}
 	
-	private void toggleChord()
+	private void open(String sx, String sy, boolean flag)
 	{
-		auto_chord = !auto_chord;
-		System.out.println("Auto-chord " + auto_chord + "\n");
+		int x, y;
+		
+		try
+		{
+			x = Integer.parseInt(sx);
+			if (x < 0 || x >= ms.getWidth())
+			{
+				System.out.println("X is out of range: " + x);
+				return;
+			}
+			y = Integer.parseInt(sy);
+			if (y < 0 || y >= ms.getHeight())
+			{
+				System.out.println("Y is out of range: " + y);
+				return;
+			}
+			
+			if (flag)
+				ms.flag(x, y);
+			else if (ms.getTile(x, y).isOpen())
+				ms.clear(x, y, true);
+			else
+				ms.clear(x, y, false);
+			
+			printBoard();
+		} catch (NumberFormatException e)
+		{
+			System.out.println(String.format("Invalid parameters: %s", Arrays.toString(new String[]{sx, sy})));
+		}
 	}
 	
 	private void printBoard()
@@ -293,51 +263,78 @@ class ConsoleDemo
 		}
 	}
 	
-	private void listCommands()
+	private class Command
 	{
-		System.out.println("Commands:");
-		list.forEach(Cmd::print);
-	}
-	
-	private class Cmd
-	{
-		private String[] commands;
-		private String description;
-		private Consumer<String[]> consumer;
+		private final String command;
 		
-		private Cmd(String[] commands, String description, Consumer<String[]> consumer)
+		private final String[] args;
+		
+		private final String description;
+		
+		private final Consumer<String[]> function;
+		
+		private final Predicate<String[]> validation;
+		
+		private Command(String command, String description, Consumer<String[]> function)
 		{
-			this.commands = commands;
+			this.command = command;
+			this.args = null;
 			this.description = description;
-			this.consumer = consumer == null ? c ->
-			{} : consumer;
+			this.function = function;
+			this.validation = args -> command.equals(args[0]);
 		}
 		
-		private boolean equals(String cmd)
+		private Command(String command, String[] args, String description, Consumer<String[]> function)
 		{
-			for (String s : commands)
-				if (s.equals(cmd))
-					return true;
-			return false;
+			this.command = command;
+			this.args = args;
+			this.description = description;
+			this.function = function;
+			this.validation = a -> command.equals(a[0]) && a.length > 2;
 		}
 		
-		private void print()
+		private Command(String[] args, String description, Consumer<String[]> function)
+		{
+			this.command = null;
+			this.args = args;
+			this.description = description;
+			this.function = function;
+			this.validation = a ->
+			{
+				if (a.length != 2)
+					return false;
+				try
+				{
+					Integer.parseInt(a[0]);
+					Integer.parseInt(a[1]);
+					return true;
+				} catch (Exception ignored) {}
+				return false;
+			};
+		}
+		
+		private boolean execute(String[] args)
+		{
+			if (!validation.test(args))
+				return false;
+			function.accept(args);
+			return true;
+		}
+		
+		@Override
+		public String toString()
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.append("    " + commands[0]);
-			if (commands.length > 1)
-				for (int i = 1; i < commands.length; i++)
-					sb.append(" | " + commands[i]);
-			
+			sb.append("    ");
+			if (command != null)
+				sb.append(command + " ");
+			if (args != null)
+				for (String arg : args)
+					sb.append("<").append(arg).append("> ");
 			while (sb.length() < WHITE_SPACE.length())
 				sb.append(" ");
 			sb.append(description);
-			System.out.println(sb.toString());
-		}
-		
-		private void execute(String[] split)
-		{
-			consumer.accept(split);
+			return sb.toString();
 		}
 	}
 }
