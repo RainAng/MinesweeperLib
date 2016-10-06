@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - 3BV and openings calculation
 
+### Fixed
+- Console demo printing wrong title
+
 ## [0.1.0] - 2016-10-06
 ### Added
 - Minesweeper, Tile, and Stopwatch classes containing base game logic

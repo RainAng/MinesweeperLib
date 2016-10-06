@@ -79,7 +79,7 @@ class ConsoleDemo
 		list.add(new Cmd(new String[]{"-ac", "-auto-chord"}, "toggle auto-chord on/off\n", c -> toggleChord()));
 		list.add(new Cmd(new String[]{"-p", "-print"}, "print board", c -> printBoard()));
 		
-		System.out.println(ANSI_LINE + "com.github.rainang.minesweeperapi.Minesweeper API Demo\n" + ANSI_RESET);
+		System.out.println(ANSI_LINE + "MinesweeperLib Demo\n" + ANSI_RESET);
 		listCommands();
 		
 		loop:
