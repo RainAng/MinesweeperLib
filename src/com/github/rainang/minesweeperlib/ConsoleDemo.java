@@ -61,20 +61,13 @@ class ConsoleDemo
 		list.add(new Cmd(new String[]{"-e", "-expert"}, "set 30x16 board with 99 mines", c -> setDifficulty
 				(Minesweeper.Difficulty.EXPERT)));
 		
-		list.add(new Cmd(new String[]{"-c <width> <height> <mines>"}, "", this::setCustom));
+		list.add(new Cmd(new String[]{"-c <width> <height> <mines>"}, "", null));
 		list.add(new Cmd(new String[]{"-custom <width> <height> <mines>"}, "\n" + WHITE_SPACE + "set custom board " +
-				"size and mine count\n" + WHITE_SPACE + "width and height range is between 5 and 32\n" + WHITE_SPACE +
-				"mine range is between 5 and (width * height - 9)\n", this::setCustom));
+				"size and mine count\n" + WHITE_SPACE + "width and height range is between 5 and 32\n" + WHITE_SPACE + "mine range is between 5 and (width * height - 9)\n", null));
 		
-		list.add(new Cmd(new String[]{"<x> <y>"}, "clear a tile", c ->
-		{
-		}));
-		list.add(new Cmd(new String[]{"<x> <y> c"}, "chord a tile", c ->
-		{
-		}));
-		list.add(new Cmd(new String[]{"<x> <y> f"}, "flag a tile\n", c ->
-		{
-		}));
+		list.add(new Cmd(new String[]{"<x> <y>"}, "clear a tile", null));
+		list.add(new Cmd(new String[]{"<x> <y> c"}, "chord a tile", null));
+		list.add(new Cmd(new String[]{"<x> <y> f"}, "flag a tile\n", null));
 		
 		list.add(new Cmd(new String[]{"-ac", "-auto-chord"}, "toggle auto-chord on/off\n", c -> toggleChord()));
 		list.add(new Cmd(new String[]{"-p", "-print"}, "print board", c -> printBoard()));
@@ -98,6 +91,12 @@ class ConsoleDemo
 			
 			if (split.length >= 2)
 			{
+				if (split[0].equals("-c") || split[0].equals("-custom"))
+				{
+					setCustom(split);
+					continue;
+				}
+				
 				int x, y;
 				
 				try
@@ -175,9 +174,9 @@ class ConsoleDemo
 		int w, h, m;
 		try
 		{
-			w = Math.min(32, Math.max(5, Integer.parseInt(cmd[2])));
-			h = Math.min(32, Math.max(5, Integer.parseInt(cmd[3])));
-			m = Math.min(w * h - 9, Math.max(5, Integer.parseInt(cmd[4])));
+			w = Math.min(32, Math.max(5, Integer.parseInt(cmd[1])));
+			h = Math.min(32, Math.max(5, Integer.parseInt(cmd[2])));
+			m = Math.min(w * h - 9, Math.max(5, Integer.parseInt(cmd[3])));
 			ms.setDifficulty(w, h, m);
 			printBoard();
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e)
@@ -310,7 +309,8 @@ class ConsoleDemo
 		{
 			this.commands = commands;
 			this.description = description;
-			this.consumer = consumer;
+			this.consumer = consumer == null ? c ->
+			{} : consumer;
 		}
 		
 		private boolean equals(String cmd)
@@ -339,6 +339,5 @@ class ConsoleDemo
 		{
 			consumer.accept(split);
 		}
-		
 	}
 }
