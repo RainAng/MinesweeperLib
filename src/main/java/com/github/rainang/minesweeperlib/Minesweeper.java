@@ -65,15 +65,15 @@ public final class Minesweeper
 	{
 		switch (difficulty)
 		{
-			default:
-			case BEGINNER:
-				setDifficulty(9, 9, 10);
-				return;
-			case INTERMEDIATE:
-				setDifficulty(16, 16, 40);
-				return;
-			case EXPERT:
-				setDifficulty(30, 16, 99);
+		default:
+		case BEGINNER:
+			setDifficulty(9, 9, 10);
+			return;
+		case INTERMEDIATE:
+			setDifficulty(16, 16, 40);
+			return;
+		case EXPERT:
+			setDifficulty(30, 16, 99);
 		}
 	}
 	
@@ -269,16 +269,16 @@ public final class Minesweeper
 		this.state = state;
 		switch (state)
 		{
-			case INIT:
-				clock.reset();
-				break;
-			case PLAY:
-				clock.start();
-				break;
-			case PAUSE:
-			case END:
-				clock.stop();
-				break;
+		case INIT:
+			clock.reset();
+			break;
+		case PLAY:
+			clock.start();
+			break;
+		case PAUSE:
+		case END:
+			clock.stop();
+			break;
 		}
 	}
 	
@@ -373,6 +373,14 @@ public final class Minesweeper
 	public Tile getLosingTile()
 	{
 		return losingTile;
+	}
+	
+	/**
+	 @return the current game time in milliseconds
+	 */
+	public long getTime()
+	{
+		return clock.getTime();
 	}
 	
 	// BOARD DATA

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2016-10-08
+### Added
+- Getter for current game time
+
 ## [0.3.1] - 2016-10-08
 ### Fixed
 - Access of Difficulty and GameState to public
