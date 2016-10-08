@@ -5,7 +5,7 @@ import java.util.*;
 public final class Minesweeper
 {
 	/** Standard Minesweeper difficulties */
-	enum Difficulty
+	public enum Difficulty
 	{
 		/** 9x9 board, 10 mines */
 		BEGINNER,
@@ -15,7 +15,7 @@ public final class Minesweeper
 		EXPERT
 	}
 	
-	enum GameState
+	public enum GameState
 	{
 		INIT,
 		PLAY,

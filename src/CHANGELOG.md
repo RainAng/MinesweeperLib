@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2016-10-08
+### Fixed
+- Access of Difficulty and GameState to public
+
 ## [0.3.0] - 2016-10-06
 ### Changed
 - Reworked commands
