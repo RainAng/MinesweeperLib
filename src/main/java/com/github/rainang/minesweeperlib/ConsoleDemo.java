@@ -21,12 +21,7 @@ class ConsoleDemo
 	{
 		if (args.length == 0)
 			return;
-		if (System.getProperty("os.name").equals("Linux"))
-		{
-			BOMB = "\u25AA";
-			FLAG = "\u25A3";
-			TILE = "\u25A1";
-		} else
+		if (!System.getProperty("os.name").equals("Linux"))
 		{
 			BOMB = "*";
 			FLAG = "F";
