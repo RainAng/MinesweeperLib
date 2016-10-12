@@ -45,6 +45,8 @@ public final class Minesweeper
 	
 	private boolean restarted;
 	
+	private boolean noFlagging;
+	
 	private Tile losingTile;
 	
 	/**
@@ -177,7 +179,7 @@ public final class Minesweeper
 	 */
 	public boolean flag(int x, int y)
 	{
-		if (state == GameState.END || state == GameState.PAUSE)
+		if (state == GameState.END || state == GameState.PAUSE || noFlagging)
 			return false;
 		if (state == GameState.INIT)
 			setState(GameState.PLAY);
@@ -282,6 +284,12 @@ public final class Minesweeper
 		}
 	}
 	
+	public final void setNoFlagging(boolean noFlagging)
+	{
+		this.noFlagging = noFlagging;
+		newGame();
+	}
+	
 	/**
 	 @return the board width
 	 */
@@ -349,6 +357,11 @@ public final class Minesweeper
 	public boolean isRestarted()
 	{
 		return restarted;
+	}
+	
+	public boolean isNoFlagging()
+	{
+		return noFlagging;
 	}
 	
 	/**
