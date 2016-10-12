@@ -1,5 +1,5 @@
 group 'com.github.rainang'
-version '0.6.1'
+version '0.7.0'
 
 apply plugin: 'java'
 
@@ -8,16 +8,26 @@ sourceCompatibility = 1.8
 jar {
 	manifest {
 		attributes "Implementation-Title": 'MinesweeperLib',
+				"Implementation-Version": version,
 				"Main-Class": 'com.github.rainang.minesweeperlib.ConsoleDemo'
 	}
 }
 
-repositories {
-
+task filterSrc(type: Copy) {
+	from(sourceSets.main.allJava) {
+		include '**/Minesweeper.java'
+		expand version: version
+	}
+	from(sourceSets.main.allJava) {
+		exclude '**/Minesweeper.java'
+	}
+	from sourceSets.main.resources
+	into getTemporaryDir()
 }
 
-dependencies {
-
+compileJava {
+	dependsOn filterSrc
+	source = filterSrc.destinationDir
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

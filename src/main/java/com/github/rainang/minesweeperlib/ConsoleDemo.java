@@ -36,6 +36,8 @@ class ConsoleDemo
 			new ConsoleDemo();
 	}
 	
+	private static final String LN = System.lineSeparator();
+	
 	private static final String WHITE_SPACE = "               ";
 	
 	private static String BOMB = "\u25AA";
@@ -71,14 +73,14 @@ class ConsoleDemo
 		list.add(new Command("-i", "set intermediate board; 16x16, 40 mines", c -> setDifficulty(INTERMEDIATE)));
 		list.add(new Command("-e", "set expert board; 30x16, 99 mines", c -> setDifficulty(EXPERT)));
 		
-		String s = "\n" + WHITE_SPACE + "set custom board size and mine count";
+		String s = LN + WHITE_SPACE + "set custom board size and mine count";
 		list.add(new Command("-c", new String[]{"width", "height", "mines"}, s, this::setCustom));
 		
 		list.add(new Command(new String[]{"x", "y"}, "clear/chord a tile", args -> open(args[0], args[1], false)));
 		list.add(new Command("f", new String[]{"x", "y"}, "flag a tile", args -> open(args[1], args[2], true)));
 		
-		System.out.println(ANSI_LINE + NAME + "MinesweeperLib Demo v" + VERSION + "\n" + ANSI_RESET);
-		System.out.println("type -h for list of commands\n");
+		System.out.println(ANSI_LINE + NAME + " Demo v" + VERSION + LN + ANSI_RESET);
+		System.out.println("type -h for list of commands" + LN);
 		printBoard();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -184,7 +186,7 @@ class ConsoleDemo
 		String m = df.format(ms.getMines());
 		String f = df.format(ms.getFlagsUsed());
 		System.out.println(String.format("Width  = %s \tMines = %s \tClicks  = %s", w, m, c));
-		System.out.print(String.format("Height = %s \tFlags = %s \tActions = %s\n\n  ", h, f, a));
+		System.out.print(String.format("Height = %s \tFlags = %s \tActions = %s" + LN + LN + "  ", h, f, a));
 		
 		df = new DecimalFormat("00");
 		for (int x = 0; x < ms.getWidth(); x++)
@@ -204,14 +206,14 @@ class ConsoleDemo
 		
 		if (ms.getState() == Minesweeper.GameState.END)
 		{
-			System.out.println("\nOps=" + ms.countOpenings() + " 3BV=" + ms.count3BV());
-			System.out.print("\nGame Over!");
+			System.out.println(LN + "Ops=" + ms.countOpenings() + " 3BV=" + ms.count3BV());
+			System.out.print(LN + "Game Over!");
 			if (ms.isWon())
 				System.out.println(" YOU WIN!");
 			else
 				System.out.println(" YOU LOSE!");
 			
-			System.out.println("New Game or Restart? -n/-r\n");
+			System.out.println("New Game or Restart? -n/-r" + LN);
 		}
 	}
 	

@@ -4,6 +4,9 @@ import java.util.*;
 
 public final class Minesweeper
 {
+	public static final String NAME = "MinesweeperLib";
+	public static final String VERSION = "${version}";
+	
 	/** Standard Minesweeper difficulties */
 	public enum Difficulty
 	{
