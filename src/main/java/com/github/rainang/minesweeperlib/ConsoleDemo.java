@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static com.github.rainang.minesweeperlib.Minesweeper.Difficulty.*;
+import static com.github.rainang.minesweeperlib.Minesweeper.NAME;
+import static com.github.rainang.minesweeperlib.Minesweeper.VERSION;
 
 class ConsoleDemo
 {
@@ -19,15 +21,26 @@ class ConsoleDemo
 	{
 		if (args.length == 0)
 			return;
+		if (System.getProperty("os.name").equals("Linux"))
+		{
+			BOMB = "\u25AA";
+			FLAG = "\u25A3";
+			TILE = "\u25A1";
+		} else
+		{
+			BOMB = "*";
+			FLAG = "F";
+			TILE = "#";
+		}
 		if (args[0].equals("demo"))
 			new ConsoleDemo();
 	}
 	
 	private static final String WHITE_SPACE = "               ";
 	
-	private static final String BOMB = "\u25AA";
-	private static final String FLAG = "\u25A3";
-	private static final String TILE = "\u25A1";
+	private static String BOMB = "\u25AA";
+	private static String FLAG = "\u25A3";
+	private static String TILE = "\u25A1";
 	
 	private static final String ANSI_RESET = "\u001B[0m";
 	
@@ -64,7 +77,7 @@ class ConsoleDemo
 		list.add(new Command(new String[]{"x", "y"}, "clear/chord a tile", args -> open(args[0], args[1], false)));
 		list.add(new Command("f", new String[]{"x", "y"}, "flag a tile", args -> open(args[1], args[2], true)));
 		
-		System.out.println(ANSI_LINE + "MinesweeperLib Demo\n" + ANSI_RESET);
+		System.out.println(ANSI_LINE + NAME + "MinesweeperLib Demo v" + VERSION + "\n" + ANSI_RESET);
 		System.out.println("type -h for list of commands\n");
 		printBoard();
 		
@@ -218,33 +231,33 @@ class ConsoleDemo
 				int i = tile.getMineCount();
 				switch (i)
 				{
-					default:
-						System.out.print("   ");
-						return;
-					case 1:
-						System.out.print(ANSI_BLUE);
-						break;
-					case 2:
-						System.out.print(ANSI_GREEN);
-						break;
-					case 3:
-						System.out.print(ANSI_RED);
-						break;
-					case 4:
-						System.out.print(ANSI_CYAN);
-						break;
-					case 5:
-						System.out.print(ANSI_YELLOW);
-						break;
-					case 6:
-						System.out.print(ANSI_PURPLE);
-						break;
-					case 7:
-						System.out.print(ANSI_BLACK);
-						break;
-					case 8:
-						System.out.print(ANSI_RESET);
-						break;
+				default:
+					System.out.print("   ");
+					return;
+				case 1:
+					System.out.print(ANSI_BLUE);
+					break;
+				case 2:
+					System.out.print(ANSI_GREEN);
+					break;
+				case 3:
+					System.out.print(ANSI_RED);
+					break;
+				case 4:
+					System.out.print(ANSI_CYAN);
+					break;
+				case 5:
+					System.out.print(ANSI_YELLOW);
+					break;
+				case 6:
+					System.out.print(ANSI_PURPLE);
+					break;
+				case 7:
+					System.out.print(ANSI_BLACK);
+					break;
+				case 8:
+					System.out.print(ANSI_RESET);
+					break;
 				}
 				System.out.print(" " + i + " ");
 			}
