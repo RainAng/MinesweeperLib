@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2016-10-12
+### Added
+- Difficulty change event
+
+### Changed
+- Listener event arguments to capture tile event source
+
 ## [0.5.0] - 2016-10-12
 ### Added
 - No flagging feature

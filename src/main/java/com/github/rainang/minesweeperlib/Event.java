@@ -9,10 +9,11 @@ public enum Event
 	TILE_FLAGGED,
 	GAME_PAUSED,
 	GAME_WON,
-	GAME_LOST;
+	GAME_LOST,
+	DIFFICULTY_CHANGED;
 	
 	public interface Listener
 	{
-		void onGameEvent(Minesweeper minesweeper, Event event);
+		void onGameEvent(Event event, Minesweeper minesweeper, Tile tile);
 	}
 }

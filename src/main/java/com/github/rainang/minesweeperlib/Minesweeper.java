@@ -109,6 +109,10 @@ public final class Minesweeper
 		this.mines = Math.min(mines, width * height - 9);
 		
 		winCondition = getWidth() * getHeight() - mines;
+		
+		for (Event.Listener l : listeners)
+			l.onGameEvent(Event.DIFFICULTY_CHANGED, this, null);
+		
 		newGame();
 	}
 	
@@ -133,7 +137,7 @@ public final class Minesweeper
 		resetCounters();
 		restarted = false;
 		for (Event.Listener l : listeners)
-			l.onGameEvent(this, Event.NEW_GAME);
+			l.onGameEvent(Event.NEW_GAME, this, null);
 	}
 	
 	/**
@@ -147,7 +151,7 @@ public final class Minesweeper
 		resetCounters();
 		restarted = true;
 		for (Event.Listener l : listeners)
-			l.onGameEvent(this, Event.RESTART_GAME);
+			l.onGameEvent(Event.RESTART_GAME, this, null);
 	}
 	
 	/**
@@ -160,7 +164,7 @@ public final class Minesweeper
 		else if (state == GameState.PAUSE)
 			setState(GameState.PLAY);
 		for (Event.Listener l : listeners)
-			l.onGameEvent(this, Event.GAME_PAUSED);
+			l.onGameEvent(Event.GAME_PAUSED, this, null);
 	}
 	
 	private void resetCounters()
@@ -208,7 +212,7 @@ public final class Minesweeper
 		actions += b ? 1 : 0;
 		flagsUsed += b ? tile.isFlag() ? 1 : -1 : 0;
 		for (Event.Listener l : listeners)
-			l.onGameEvent(this, Event.TILE_FLAGGED);
+			l.onGameEvent(Event.TILE_FLAGGED, this, tile);
 		return b;
 	}
 	
@@ -271,7 +275,7 @@ public final class Minesweeper
 		{
 			Event e = chord ? Event.TILE_CHORDED : Event.TILE_CLEARED;
 			for (Event.Listener l : listeners)
-				l.onGameEvent(this, e);
+				l.onGameEvent(e, this, tile);
 		}
 		
 		if (i == -1)
@@ -285,13 +289,13 @@ public final class Minesweeper
 					t.open();
 				}
 			for (Event.Listener l : listeners)
-				l.onGameEvent(this, Event.GAME_LOST);
+				l.onGameEvent(Event.GAME_LOST, this, tile);
 			return true;
 		} else if (cleared == winCondition)
 		{
 			setState(GameState.END);
 			for (Event.Listener l : listeners)
-				l.onGameEvent(this, Event.GAME_WON);
+				l.onGameEvent(Event.GAME_WON, this, tile);
 		}
 		
 		return i > 0;
