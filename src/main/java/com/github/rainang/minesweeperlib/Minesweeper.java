@@ -29,6 +29,8 @@ public final class Minesweeper
 	
 	private final Stopwatch clock = new Stopwatch();
 	
+	private List<Event.Listener> listeners = new ArrayList<>();
+	
 	private Tile[][] tiles;
 	
 	private int mines;
@@ -130,6 +132,8 @@ public final class Minesweeper
 		}
 		resetCounters();
 		restarted = false;
+		for (Event.Listener l : listeners)
+			l.onGameEvent(this, Event.NEW_GAME);
 	}
 	
 	/**
@@ -142,6 +146,8 @@ public final class Minesweeper
 				getTile(x, y).restart();
 		resetCounters();
 		restarted = true;
+		for (Event.Listener l : listeners)
+			l.onGameEvent(this, Event.RESTART_GAME);
 	}
 	
 	/**
@@ -153,6 +159,8 @@ public final class Minesweeper
 			setState(GameState.PAUSE);
 		else if (state == GameState.PAUSE)
 			setState(GameState.PLAY);
+		for (Event.Listener l : listeners)
+			l.onGameEvent(this, Event.GAME_PAUSED);
 	}
 	
 	private void resetCounters()
@@ -163,6 +171,16 @@ public final class Minesweeper
 		flagsUsed = 0;
 		losingTile = null;
 		setState(GameState.INIT);
+	}
+	
+	public boolean addEventListener(Event.Listener listener)
+	{
+		return listeners.add(listener);
+	}
+	
+	public boolean removeEventListener(Event.Listener listener)
+	{
+		return listeners.remove(listener);
 	}
 	
 	// GAME INPUT
@@ -189,6 +207,8 @@ public final class Minesweeper
 		clicks++;
 		actions += b ? 1 : 0;
 		flagsUsed += b ? tile.isFlag() ? 1 : -1 : 0;
+		for (Event.Listener l : listeners)
+			l.onGameEvent(this, Event.TILE_FLAGGED);
 		return b;
 	}
 	
@@ -246,6 +266,14 @@ public final class Minesweeper
 		clicks++;
 		actions += i > 0 ? 1 : 0;
 		cleared += i;
+		
+		if (i > 0)
+		{
+			Event e = chord ? Event.TILE_CHORDED : Event.TILE_CLEARED;
+			for (Event.Listener l : listeners)
+				l.onGameEvent(this, e);
+		}
+		
 		if (i == -1)
 		{
 			setState(GameState.END);
@@ -256,9 +284,16 @@ public final class Minesweeper
 						losingTile = t;
 					t.open();
 				}
+			for (Event.Listener l : listeners)
+				l.onGameEvent(this, Event.GAME_LOST);
 			return true;
 		} else if (cleared == winCondition)
+		{
 			setState(GameState.END);
+			for (Event.Listener l : listeners)
+				l.onGameEvent(this, Event.GAME_WON);
+		}
+		
 		return i > 0;
 	}
 	
