@@ -28,7 +28,7 @@ public final class Minesweeper
 	
 	private GameState state = GameState.INIT;
 	
-	private final Random rng;
+	private final Random rng = new Random();
 	
 	private final Stopwatch clock = new Stopwatch();
 	
@@ -54,14 +54,15 @@ public final class Minesweeper
 	
 	private Tile losingTile;
 	
+	private long seed;
+	
 	/**
 	 Constructs a new Minesweeper board
 	 
 	 @param rng the random number generator used in generating mines
 	 */
-	public Minesweeper(Random rng)
+	public Minesweeper()
 	{
-		this.rng = rng;
 		setDifficulty(Difficulty.BEGINNER);
 	}
 	
@@ -117,11 +118,24 @@ public final class Minesweeper
 		newGame();
 	}
 	
+	
 	/**
-	 Starts a new game, resetting all counters and regenerating mines.
+	 Starts a new game, resetting all counters and generating new mines. This method uses a randomly generated seed.
 	 */
 	public void newGame()
 	{
+		newGame(rng.nextLong());
+	}
+	
+	/**
+	 Starts a new game, resetting all counters and generating new mines.
+	 
+	 @param seed the seed to use for generating mines
+	 */
+	public void newGame(long seed)
+	{
+		this.seed = seed;
+		rng.setSeed(seed);
 		for (int y = 0; y < getHeight(); y++)
 			for (int x = 0; x < getWidth(); x++)
 				getTile(x, y).reset();
@@ -434,6 +448,14 @@ public final class Minesweeper
 	public long getTime()
 	{
 		return clock.getTime();
+	}
+	
+	/**
+	 @return the seed used for generating the current board's mines
+	 */
+	public long getSeed()
+	{
+		return seed;
 	}
 	
 	// BOARD DATA
