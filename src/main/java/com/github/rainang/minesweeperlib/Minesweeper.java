@@ -85,20 +85,18 @@ public final class Minesweeper
 	}
 	
 	/**
-	 Sets a custom game difficulty. All parameters must be greater than or equal to 5. Mines must be less than or
-	 equal to 9 less the total amount of tiles (width*height).
+	 Sets a custom game difficulty. Minimum board size is 5x5. Maximum board size is 64x64. Mines must be less
+	 than or equal to 10 less the total amount of tiles.
 	 
 	 @param width  the width of the board
 	 @param height the height of the board
 	 @param mines  the amount of mines
-	 
-	 @throws IllegalArgumentException if any argument is less than 5
 	 */
 	public void setDifficulty(int width, int height, int mines)
 	{
-		if (width < 5 || height < 5 || mines < 5)
-			throw new IllegalArgumentException(String.format("Args must be greater than or equal to 5: %s/%s/%s",
-					width, height, mines));
+		width = Math.min(64, Math.max(5, width));
+		height = Math.min(64, Math.max(5, height));
+		mines = Math.min(width * height - 10, Math.max(5, mines));
 		
 		this.tiles = new Tile[width][height];
 		for (int y = 0; y < height; y++)
@@ -109,7 +107,7 @@ public final class Minesweeper
 			for (int x = 0; x < width; x++)
 				tiles[x][y].init(this);
 		
-		this.mines = Math.min(mines, width * height - 9);
+		this.mines = mines;
 		
 		winCondition = getWidth() * getHeight() - mines;
 		
