@@ -58,8 +58,6 @@ public final class Minesweeper
 	
 	/**
 	 Constructs a new Minesweeper board
-	 
-	 @param rng the random number generator used in generating mines
 	 */
 	public Minesweeper()
 	{
@@ -68,6 +66,8 @@ public final class Minesweeper
 	
 	/**
 	 Sets the game to a standard Minesweeper difficulty
+	 
+	 @param difficulty the difficulty setting
 	 */
 	public void setDifficulty(Difficulty difficulty)
 	{
