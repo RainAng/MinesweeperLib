@@ -7,7 +7,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -52,7 +51,7 @@ class ConsoleDemo
 	private static final String ANSI_CYAN = "\u001B[36m";
 	private static final String ANSI_WHITE = "\u001B[37m";
 	
-	private final Minesweeper ms = new Minesweeper(new Random());
+	private final Minesweeper ms = new Minesweeper();
 	
 	private ConsoleDemo() throws IOException
 	{
