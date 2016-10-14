@@ -5,13 +5,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- Minesweeper tile class.
+ A <code>Minesweeper</code> tile.
+ 
  */
 public final class Tile
 {
-	private int x;
+	private final int x;
 	
-	private int y;
+	private final int y;
 	
 	private boolean mine;
 	
@@ -19,13 +20,15 @@ public final class Tile
 	
 	private boolean flag;
 	
-	private int count;
+	private int mineCount;
 	
 	private Tile[] neighbors;
 	
 	/**
-	 @param x tile's x position
-	 @param y tile's y position
+	 Constructs a tile with the specified coordinates.
+	 
+	 @param x the x-coordinate
+	 @param y the y-coordinate
 	 */
 	Tile(int x, int y)
 	{
@@ -34,38 +37,40 @@ public final class Tile
 	}
 	
 	/**
-	 Initializes this tile, listing all neighboring tiles.
+	 Lists all neighbors of this tile.
+	 <p>
+	 This method is called once every time the game <code>Difficulty</code> is changed.
+	 </p>
+	 
+	 @param ms the <code>Minesweeper</code> instance for referencing tiles
 	 */
-	void init(Minesweeper minesweeper)
+	void initializeNeighbors(Minesweeper ms)
 	{
-		boolean bx = x == 0 || x == minesweeper.getWidth() - 1;
-		boolean by = y == 0 || y == minesweeper.getHeight() - 1;
-		int n = bx ^ by ? 5 : bx ? 3 : 8;
-		neighbors = new Tile[n];
-		
 		List<Tile> list = new ArrayList<>();
-		for (int y = this.y - 1; y < this.y + 2; y++)
-			for (int x = this.x - 1; x < this.x + 2; x++)
-				if (!(x == this.x && y == this.y))
-					if (x >= 0 && y >= 0 && x < minesweeper.getWidth() && y < minesweeper.getHeight())
-						list.add(minesweeper.getTile(x, y));
+		for (int j = y - 1; j < y + 2; j++)
+			for (int i = x - 1; i < x + 2; i++)
+				if (!(i == x && j == y))
+					if (i >= 0 && j >= 0 && i < ms.getWidth() && j < ms.getHeight())
+						list.add(ms.getTile(i, j));
 		
-		for (int i = 0; i < neighbors.length; i++)
-			neighbors[i] = list.get(i);
+		boolean bx = x == 0 || x == ms.getWidth() - 1;
+		boolean by = y == 0 || y == ms.getHeight() - 1;
+		int n = bx ^ by ? 5 : bx ? 3 : 8;
+		neighbors = list.toArray(new Tile[n]);
 	}
 	
 	/**
-	 Resets all tile data to its initial state.
+	 Resets this tile's attributes to its initial state.
 	 */
 	void reset()
 	{
 		restart();
 		mine = false;
-		count = 0;
+		mineCount = 0;
 	}
 	
 	/**
-	 A soft reset leaving mine data as is.
+	 Resets this tile's attributes to its initial state but leaves mine data the same.
 	 */
 	void restart()
 	{
@@ -74,17 +79,20 @@ public final class Tile
 	}
 	
 	/**
-	 Toggles this tile's mine on/off. Then updates neighboring tiles of changes.
+	 Toggles this tile's mine on/off.
 	 */
 	void mine()
 	{
 		mine = !mine;
 		for (Tile neighbor : neighbors)
-			neighbor.count += mine ? 1 : -1;
+			neighbor.mineCount += mine ? 1 : -1;
 	}
 	
 	/**
-	 Toggles this tile's flag on/off if it is not cleared. Otherwise, this does nothing.
+	 Toggles this tile's flag on/off.
+	 <p>
+	 If this tile is marked open, this does nothing.
+	 </p>
 	 
 	 @return true if toggling occurred
 	 */
@@ -97,12 +105,14 @@ public final class Tile
 	}
 	
 	/**
-	 Opens this tile if it is neither flagged nor opened.
-	 <p>If this tile has no mines nearby, all non-flagged, unopened neighbors will be opened. This method will
-	 continue opening neighboring tiles recursively insofar as the condition for opening neighboring tiles are met
-	 .</p>
+	 Marks this tile as opened.
+	 <p>
+	 If this tile contains a flag or is marked open, this does nothing. If this tile's mine count is equal to
+	 <code>0</code>, this will call the <code>open</code> method on all neighboring tiles, potentially starting a chain
+	 of <code>open</code> method calls.
+	 </p>
 	 
-	 @return the amount of tiles opened; -1 if a mine has been revealed
+	 @return the amount of tiles opened or -1 if a mine has been revealed
 	 */
 	int open()
 	{
@@ -115,24 +125,27 @@ public final class Tile
 			return -1;
 		
 		int i = 1;
-		if (count == 0)
+		if (mineCount == 0)
 			for (Tile neighbor : neighbors)
 				i += neighbor.open();
 		return i;
 	}
 	
 	/**
-	 Opens all neighboring non-flagged, unopened tiles if this tile is opened and contains a nearby flag count equal
-	 to the amount of miens nearby. If this tile has no mines nearby, this does nothing.
-	 <p>This may initiate a recursive neighbor opening chain.</p>
+	 Performs a chord action on this tile.
+	 <p>
+	 If this tile has not been marked open, this does nothing. If this tile's mine count and flag count are not equal,
+	 this does nothing. Otherwise, this calls the {@link #open() open} method on all neighboring tiles
+	 that do not contain a flag.
+	 </p>
 	 
-	 @return the amount of tiles opened; -1 if a mine has been revealed
+	 @return the amount of tiles opened or -1 if a mine has been revealed
 	 
 	 @see #open()
 	 */
 	int chord()
 	{
-		if (!open || count == 0 || count != getFlagCount())
+		if (!open || mineCount == 0 || mineCount != getFlagCount())
 			return 0;
 		int i = 0;
 		for (Tile neighbor : neighbors)
@@ -146,7 +159,9 @@ public final class Tile
 	}
 	
 	/**
-	 @return the y position of this tile
+	 Returns the x-coordinate of this tile.
+	 
+	 @return the x-coordinate of this tile
 	 */
 	public int getX()
 	{
@@ -154,7 +169,9 @@ public final class Tile
 	}
 	
 	/**
-	 @return the x position of this tile
+	 Returns the y-coordinate of this tile.
+	 
+	 @return the y-coordinate of this tile
 	 */
 	public int getY()
 	{
@@ -162,6 +179,8 @@ public final class Tile
 	}
 	
 	/**
+	 Returns true if this tile contains a mine.
+	 
 	 @return true if this tile contains a mine
 	 */
 	public boolean isMine()
@@ -170,6 +189,8 @@ public final class Tile
 	}
 	
 	/**
+	 Returns true if this tile has been cleared.
+	 
 	 @return true if this tile has been cleared
 	 */
 	public boolean isOpen()
@@ -178,7 +199,9 @@ public final class Tile
 	}
 	
 	/**
-	 @return true if this tile is flagged
+	 Returns true if this tile contains a flag.
+	 
+	 @return true if this tile contains a flag
 	 */
 	public boolean isFlag()
 	{
@@ -186,15 +209,19 @@ public final class Tile
 	}
 	
 	/**
-	 @return the amount of mines around this tile
+	 Returns the number of neighboring tiles that contain a mine.
+	 
+	 @return the number of neighboring tiles that contain a mine
 	 */
 	public int getMineCount()
 	{
-		return count;
+		return mineCount;
 	}
 	
 	/**
-	 @return the amount of flags around this tile
+	 Returns the number of neighboring tiles that contain a flag.
+	 
+	 @return the number of neighboring tiles that contain a flag
 	 */
 	public int getFlagCount()
 	{
@@ -206,7 +233,9 @@ public final class Tile
 	}
 	
 	/**
-	 @return a list of tiles surrounding this tile
+	 Returns a list of all neighboring tiles.
+	 
+	 @return a list of all neighboring tiles
 	 */
 	public List<Tile> getNeighbors()
 	{
