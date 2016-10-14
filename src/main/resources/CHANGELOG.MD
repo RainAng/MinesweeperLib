@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.1] - 2016-10-14
+### Fixed
+- Angle bracket causing error on build
+
 ## [0.8.0] - 2016-10-14
 
 ## [0.7.1] - 2016-10-13
