@@ -6,7 +6,6 @@ import java.util.List;
 
 /**
  A <code>Minesweeper</code> tile.
- 
  */
 public final class Tile
 {
@@ -42,7 +41,7 @@ public final class Tile
 	 This method is called once every time the game <code>Difficulty</code> is changed.
 	 </p>
 	 
-	 @param ms the <code>Minesweeper</code> instance for referencing tiles
+	 @param ms the <code>Minesweeper</code> object to reference
 	 */
 	void initializeNeighbors(Minesweeper ms)
 	{
@@ -60,7 +59,7 @@ public final class Tile
 	}
 	
 	/**
-	 Resets this tile's attributes to its initial state.
+	 Resets the attributes of this tile to its initial state.
 	 */
 	void reset()
 	{
@@ -70,7 +69,7 @@ public final class Tile
 	}
 	
 	/**
-	 Resets this tile's attributes to its initial state but leaves mine data the same.
+	 Resets the attributes of this tile to its initial state but leaves mine data the same.
 	 */
 	void restart()
 	{
@@ -79,9 +78,9 @@ public final class Tile
 	}
 	
 	/**
-	 Toggles this tile's mine on/off.
+	 Toggles the <code>mine</code> attribute of this tile.
 	 */
-	void mine()
+	void toggleMine()
 	{
 		mine = !mine;
 		for (Tile neighbor : neighbors)
@@ -89,34 +88,29 @@ public final class Tile
 	}
 	
 	/**
-	 Toggles this tile's flag on/off.
-	 <p>
-	 If this tile is marked open, this does nothing.
-	 </p>
+	 Attempts to perform a flag action. A flag action cannot occur if the tile is open.
 	 
-	 @return true if toggling occurred
+	 @return <code>true</code> if toggling occurred
 	 */
-	boolean flag()
+	boolean toggleFlag()
 	{
-		if (open)
+		if (isOpen())
 			return false;
 		flag = !flag;
 		return true;
 	}
 	
 	/**
-	 Marks this tile as opened.
-	 <p>
-	 If this tile contains a flag or is marked open, this does nothing. If this tile's mine count is equal to
-	 <code>0</code>, this will call the <code>open</code> method on all neighboring tiles, potentially starting a chain
-	 of <code>open</code> method calls.
-	 </p>
+	 Attempts to perform an open action. An open action cannot occur if the tile is open or contains a flag. If the
+	 action is successful, no mine is revealed, and no mines are nearby, all neighboring tiles' <code>open</code>
+	 method will be invoked. This may start a chain of <code>open</code> method invocations until no more tiles may be
+	 opened.
 	 
-	 @return the amount of tiles opened or -1 if a mine has been revealed
+	 @return the amount of tiles opened. This will be negated if a mine is revealed.
 	 */
 	int open()
 	{
-		if (open || flag)
+		if (isOpen() || hasFlag())
 			return 0;
 		
 		open = true;
@@ -132,27 +126,24 @@ public final class Tile
 	}
 	
 	/**
-	 Performs a chord action on this tile.
-	 <p>
-	 If this tile has not been marked open, this does nothing. If this tile's mine count and flag count are not equal,
-	 this does nothing. Otherwise, this calls the {@link #open() open} method on all neighboring tiles
-	 that do not contain a flag.
-	 </p>
+	 Attempts to perform a chord action. A chord action cannot occur if this tile is <i>not</i> open, no mines are
+	 nearby, or the nearby mine and flag counts are not equal. Otherwise, this invokes the <code>open</code> method on
+	 all neighboring tiles.
 	 
-	 @return the amount of tiles opened or -1 if a mine has been revealed
+	 @return the amount of tiles opened. This will be negated if a mine is revealed.
 	 
 	 @see #open()
 	 */
 	int chord()
 	{
-		if (!open || mineCount == 0 || mineCount != getFlagCount())
+		if (!open || mineCount == 0 || getMineCount() != getFlagCount())
 			return 0;
 		int i = 0;
 		for (Tile neighbor : neighbors)
 		{
 			int j = neighbor.open();
 			if (j == -1)
-				return -1;
+				return -(i + 1);
 			i += j;
 		}
 		return i;
@@ -179,9 +170,9 @@ public final class Tile
 	}
 	
 	/**
-	 Returns true if this tile contains a mine.
+	 Returns <code>true</code> if this tile contains a mine.
 	 
-	 @return true if this tile contains a mine
+	 @return <code>true</code> if this tile contains a mine
 	 */
 	public boolean isMine()
 	{
@@ -189,9 +180,9 @@ public final class Tile
 	}
 	
 	/**
-	 Returns true if this tile has been cleared.
+	 Returns <code>true</code> if this tile is open.
 	 
-	 @return true if this tile has been cleared
+	 @return <code>true</code> if this tile is open
 	 */
 	public boolean isOpen()
 	{
@@ -199,11 +190,11 @@ public final class Tile
 	}
 	
 	/**
-	 Returns true if this tile contains a flag.
+	 Returns <code>true</code> if this tile contains a flag.
 	 
-	 @return true if this tile contains a flag
+	 @return <code>true</code> if this tile contains a flag
 	 */
-	public boolean isFlag()
+	public boolean hasFlag()
 	{
 		return flag;
 	}

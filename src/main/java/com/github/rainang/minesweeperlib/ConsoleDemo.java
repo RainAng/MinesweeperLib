@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static com.github.rainang.minesweeperlib.Minesweeper.Difficulty.*;
+import static com.github.rainang.minesweeperlib.Difficulty.*;
 import static com.github.rainang.minesweeperlib.Minesweeper.NAME;
 import static com.github.rainang.minesweeperlib.Minesweeper.VERSION;
 
@@ -111,7 +111,7 @@ class ConsoleDemo
 		printBoard();
 	}
 	
-	private void setDifficulty(Minesweeper.Difficulty difficulty)
+	private void setDifficulty(Difficulty difficulty)
 	{
 		ms.setDifficulty(difficulty);
 		printBoard();
@@ -198,11 +198,11 @@ class ConsoleDemo
 			System.out.println(ANSI_RESET);
 		}
 		
-		if (ms.getState() == Minesweeper.GameState.END)
+		if (ms.getGameState() == GameState.END)
 		{
 			System.out.println(LN + "Ops=" + ms.countOpenings() + " 3BV=" + ms.count3BV());
 			System.out.print(LN + "Game Over!");
-			if (ms.isWon())
+			if (ms.isGameWon())
 				System.out.println(" YOU WIN!");
 			else
 				System.out.println(" YOU LOSE!");
@@ -259,9 +259,9 @@ class ConsoleDemo
 			}
 		} else
 		{
-			if (tile.isFlag())
+			if (tile.hasFlag())
 			{
-				if (ms.getState() == Minesweeper.GameState.END && !tile.isMine())
+				if (ms.getGameState() == GameState.END && !tile.isMine())
 					System.out.print(ANSI_RED + " " + FLAG + " ");
 				else
 					System.out.print(ANSI_RESET + " " + FLAG + " ");
