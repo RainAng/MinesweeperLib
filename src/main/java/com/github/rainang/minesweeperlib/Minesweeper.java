@@ -1,38 +1,24 @@
 package com.github.rainang.minesweeperlib;
 
+import java.awt.event.ActionListener;
 import java.util.*;
 
+/**
+ A Minesweeper board class.
+ */
 public final class Minesweeper
 {
 	public static final String NAME = "MinesweeperLib";
+	
 	public static final String VERSION = "${version}";
-	
-	/** Standard Minesweeper difficulties */
-	public enum Difficulty
-	{
-		/** 9x9 board, 10 mines */
-		BEGINNER,
-		/** 16x16 board, 40 mines */
-		INTERMEDIATE,
-		/** 30x16 board, 99 mines */
-		EXPERT
-	}
-	
-	public enum GameState
-	{
-		INIT,
-		PLAY,
-		PAUSE,
-		END
-	}
-	
-	private GameState state = GameState.INIT;
 	
 	private final Random rng = new Random();
 	
 	private final Stopwatch clock = new Stopwatch();
 	
-	private List<Event.Listener> listeners = new ArrayList<>();
+	private GameState gameState = GameState.INIT;
+	
+	private List<GameEvent.Listener> listeners = new ArrayList<>();
 	
 	private Tile[][] tiles;
 	
@@ -57,7 +43,7 @@ public final class Minesweeper
 	private long seed;
 	
 	/**
-	 Constructs a new Minesweeper board
+	 Constructs a new board. The difficulty is set to <code>BEGINNER</code> by default.
 	 */
 	public Minesweeper()
 	{
@@ -65,9 +51,14 @@ public final class Minesweeper
 	}
 	
 	/**
-	 Sets the game to a standard Minesweeper difficulty
+	 Sets the game to a standard Minesweeper difficulty.
+	 <p>
+	 Note: This method will invoke the <code>newGame</code> method once the new difficulty has been set.
+	 </p>
 	 
 	 @param difficulty the difficulty setting
+	 
+	 @see Difficulty
 	 */
 	public void setDifficulty(Difficulty difficulty)
 	{
@@ -86,8 +77,12 @@ public final class Minesweeper
 	}
 	
 	/**
-	 Sets a custom game difficulty. Minimum board size is 5x5. Maximum board size is 64x64. Mines must be less
-	 than or equal to 10 less the total amount of tiles.
+	 Sets a custom game difficulty. The minimum board size is <code>5x5</code>, maximum is <code>64x64</code>. Mines
+	 must be less than or equal to 10 less the total amount of tiles. That is, <code>mines <= width * height -
+	 10</code>. Each parameter will be clamped within its respective range.
+	 <p>
+	 Note: This method will invoke the <code>newGame</code> method once the new difficulty has been set.
+	 </p>
 	 
 	 @param width  the width of the board
 	 @param height the height of the board
@@ -106,21 +101,22 @@ public final class Minesweeper
 		
 		for (int y = 0; y < height; y++)
 			for (int x = 0; x < width; x++)
-				tiles[x][y].init(this);
+				tiles[x][y].initializeNeighbors(this);
 		
 		this.mines = mines;
 		
 		winCondition = getWidth() * getHeight() - mines;
 		
-		for (Event.Listener l : listeners)
-			l.onGameEvent(Event.DIFFICULTY_CHANGED, this, null);
+		for (GameEvent.Listener l : listeners)
+			l.onGameEvent(GameEvent.DIFFICULTY_CHANGE_EVENT, this, null);
 		
 		newGame();
 	}
 	
 	
 	/**
-	 Starts a new game, resetting all counters and generating new mines. This method uses a randomly generated seed.
+	 Generates a new board. This resets all the counters and generates new mines. This method uses a randomly generated
+	 seed for generating mines.
 	 */
 	public void newGame()
 	{
@@ -128,7 +124,8 @@ public final class Minesweeper
 	}
 	
 	/**
-	 Starts a new game, resetting all counters and generating new mines.
+	 Generates a new board. This resets all the counters and generates new mines. This method uses the specified
+	 <code>seed</code> for generating mines.
 	 
 	 @param seed the seed to use for generating mines
 	 */
@@ -136,68 +133,89 @@ public final class Minesweeper
 	{
 		this.seed = seed;
 		rng.setSeed(seed);
+		
 		for (int y = 0; y < getHeight(); y++)
 			for (int x = 0; x < getWidth(); x++)
-				getTile(x, y).reset();
+				tiles[x][y].reset();
 		
 		for (int i = 0; i < getMines(); i++)
 		{
 			int x = rng.nextInt(getWidth());
 			int y = rng.nextInt(getHeight());
-			if (getTile(x, y).isMine())
+			Tile t = tiles[x][y];
+			if (t.isMine())
 				i--;
 			else
-				getTile(x, y).mine();
+				t.toggleMine();
 		}
-		resetCounters();
-		restarted = false;
-		for (Event.Listener l : listeners)
-			l.onGameEvent(Event.NEW_GAME, this, null);
+		resetBoard(false);
+		for (GameEvent.Listener l : listeners)
+			l.onGameEvent(GameEvent.NEW_GAME_EVENT, this, null);
 	}
 	
 	/**
-	 Restarts the game, resetting all counters but leaving mines as is.
+	 Resets the board. This resets all counters but leaves mines as is.
 	 */
 	public void restartGame()
 	{
 		for (int y = 0; y < getHeight(); y++)
 			for (int x = 0; x < getWidth(); x++)
-				getTile(x, y).restart();
-		resetCounters();
-		restarted = true;
-		for (Event.Listener l : listeners)
-			l.onGameEvent(Event.RESTART_GAME, this, null);
+				tiles[x][y].restart();
+		resetBoard(true);
+		for (GameEvent.Listener l : listeners)
+			l.onGameEvent(GameEvent.RESTART_GAME_EVENT, this, null);
 	}
 	
 	/**
-	 Pauses the game
+	 Pauses or resumes the game. If the <code>gameState</code> is <code>PLAY</code>, the game will be paused. If the
+	 <code>gameState</code> is <code>PAUSE</code>, the game will be resumed.
 	 */
 	public void pauseGame()
 	{
-		if (state == GameState.PLAY)
-			setState(GameState.PAUSE);
-		else if (state == GameState.PAUSE)
-			setState(GameState.PLAY);
-		for (Event.Listener l : listeners)
-			l.onGameEvent(Event.GAME_PAUSED, this, null);
+		if (gameState == GameState.PLAY)
+			setGameState(GameState.PAUSE);
+		else if (gameState == GameState.PAUSE)
+			setGameState(GameState.PLAY);
+		else
+			return;
+		
+		for (GameEvent.Listener l : listeners)
+			l.onGameEvent(GameEvent.PAUSE_EVENT, this, null);
 	}
 	
-	private void resetCounters()
+	private void resetBoard(boolean restart)
 	{
 		cleared = 0;
 		clicks = 0;
 		actions = 0;
 		flagsUsed = 0;
 		losingTile = null;
-		setState(GameState.INIT);
+		restarted = restart;
+		setGameState(GameState.INIT);
 	}
 	
-	public boolean addEventListener(Event.Listener listener)
+	/**
+	 Registers a game event listener. Every listener's <code>onGameEvent</code> method will be invoked by order of
+	 registry. That is, the first listener registered will be the first to be invoked.
+	 
+	 @param listener the <code>GameEvent.Listener</code> object to register
+	 
+	 @return <code>true</code> if the listener was successfully added
+	 */
+	public boolean addGameEventListener(GameEvent.Listener listener)
 	{
 		return listeners.add(listener);
 	}
 	
-	public boolean removeEventListener(Event.Listener listener)
+	
+	/**
+	 Removes a game event listener.
+	 
+	 @param listener the <code>GameEvent.Listener</code> object to register
+	 
+	 @return <code>true</code> if the listener was successfully added
+	 */
+	public boolean removeGameEventListener(GameEvent.Listener listener)
 	{
 		return listeners.remove(listener);
 	}
@@ -205,97 +223,107 @@ public final class Minesweeper
 	// GAME INPUT
 	
 	/**
-	 Flags the tile in the given position
+	 Attempts to perform a flag action on the specified coordinate. A flag action cannot occur if the tile is open.
 	 
-	 @param x the x position
-	 @param y the y position
+	 @param x the x-coordinate of the tile
+	 @param y the y-coordinate of the tile
 	 
-	 @return true if flagging was successful
-	 
-	 @throws IndexOutOfBoundsException if the given position is invalid
+	 @return <code>true</code> if the flag action was successful
 	 */
 	public boolean flag(int x, int y)
 	{
-		if (state == GameState.END || state == GameState.PAUSE || noFlagging)
+		if (gameState == GameState.END || gameState == GameState.PAUSE || noFlagging)
 			return false;
-		if (state == GameState.INIT)
-			setState(GameState.PLAY);
 		
 		Tile tile = getTile(x, y);
-		boolean b = tile.flag();
+		
+		if (tile == null)
+			return false;
+		
+		boolean b = tile.toggleFlag();
+		
+		if (gameState == GameState.INIT)
+			return b;
+		
 		clicks++;
 		actions += b ? 1 : 0;
-		flagsUsed += b ? tile.isFlag() ? 1 : -1 : 0;
-		for (Event.Listener l : listeners)
-			l.onGameEvent(Event.TILE_FLAGGED, this, tile);
+		flagsUsed += b ? tile.hasFlag() ? 1 : -1 : 0;
+		
+		for (GameEvent.Listener l : listeners)
+			l.onGameEvent(GameEvent.FLAG_EVENT, this, tile);
+		
 		return b;
 	}
 	
 	/**
-	 If <code>chord</code>, attempts a chord move on the tile on the given position. Otherwise, attempts to clear the
-	 tile normally.
+	 Attempts to perform an open action on the specified coordinate. An open action cannot occur if the tile is open or
+	 contains a flag. If the action is successful, no mine is revealed, and no mines are nearby, all neighboring tiles'
+	 <code>open</code> method will be invoked. This may start a chain of <code>open</code> method invocations until no
+	 more tiles may be opened.
 	 
-	 @param x     the x position
-	 @param y     the y position
-	 @param chord true to apply a chord action instead of a normal one
+	 @param x the x-coordinate of the tile
+	 @param y the y-coordinate of the tile
 	 
-	 @return true if at least 1 tile has been cleared
-	 
-	 @throws NullPointerException if the given position is invalid
+	 @return the amount of tiles opened. This will be negated if a mine is revealed.
 	 */
-	public boolean clear(int x, int y, boolean chord)
+	public int open(int x, int y)
 	{
-		if (state == GameState.END || state == GameState.PAUSE)
-			return false;
+		return doAction(x, y, false);
+	}
+	
+	/**
+	 Attempts to perform a chord action on the specified coordinate. A chord action cannot occur if this tile is
+	 <i>not</i> open, no mines are nearby, or the nearby mine and flag counts are not equal. Otherwise, this invokes
+	 the <code>open</code> method on all neighboring tiles.
+	 
+	 @param x the x-coordinate of the tile
+	 @param y the y-coordinate of the tile
+	 
+	 @return the amount of tiles opened. This will be negated if a mine is revealed.
+	 
+	 @see #open
+	 */
+	public int chord(int x, int y)
+	{
+		return doAction(x, y, true);
+	}
+	
+	private int doAction(int x, int y, boolean chord)
+	{
+		if (gameState == GameState.END || gameState == GameState.PAUSE)
+			return 0;
 		
 		Tile tile = getTile(x, y);
 		
-		if (state == GameState.INIT)
+		if (tile == null)
+			return 0;
+		
+		if (gameState == GameState.INIT)
 		{
 			if (chord)
-				return false;
-			setState(GameState.PLAY);
+				return 0;
+			
+			setGameState(GameState.PLAY);
 			
 			if (!restarted)
-			{
-				List<Tile> list = tile.getNeighbors();
-				list.add(tile);
-				int i = 0;
-				for (Tile t : list)
-					if (t.isMine())
-					{
-						t.mine();
-						i++;
-					}
-				while (i > 0)
-				{
-					int x1 = rng.nextInt(getWidth());
-					int y1 = rng.nextInt(getHeight());
-					Tile t = getTile(x1, y1);
-					if (!t.isMine() && !list.contains(t))
-					{
-						t.mine();
-						i--;
-					}
-				}
-			}
+				relocateMines(tile);
 		}
 		
 		int i = chord ? tile.chord() : tile.open();
 		clicks++;
 		actions += i > 0 ? 1 : 0;
-		cleared += i;
+		cleared += Math.abs(i);
 		
-		if (i > 0)
+		if (i != 0)
 		{
-			Event e = chord ? Event.TILE_CHORDED : Event.TILE_CLEARED;
-			for (Event.Listener l : listeners)
+			GameEvent e = chord ? GameEvent.CHORD_EVENT : GameEvent.OPEN_EVENT;
+			for (GameEvent.Listener l : listeners)
 				l.onGameEvent(e, this, tile);
 		}
 		
-		if (i == -1)
+		if (i < 0)
 		{
-			setState(GameState.END);
+			setGameState(GameState.END);
 			for (Tile[] ts : tiles)
 				for (Tile t : ts)
 				{
@@ -303,27 +331,52 @@ public final class Minesweeper
 						losingTile = t;
 					t.open();
 				}
-			for (Event.Listener l : listeners)
-				l.onGameEvent(Event.GAME_LOST, this, tile);
-			return true;
+			for (GameEvent.Listener l : listeners)
+				l.onGameEvent(GameEvent.LOSE_EVENT, this, tile);
+			return i;
 		} else if (cleared == winCondition)
 		{
-			setState(GameState.END);
-			for (Event.Listener l : listeners)
-				l.onGameEvent(Event.GAME_WON, this, tile);
+			setGameState(GameState.END);
+			for (GameEvent.Listener l : listeners)
+				l.onGameEvent(GameEvent.WIN_EVENT, this, tile);
 		}
 		
-		return i > 0;
+		return i;
 	}
 	
-	// BOARD SETTERS & GETTERS
-	
-	private void setState(GameState state)
+	private void relocateMines(Tile tile)
 	{
-		if (this.state == state)
+		List<Tile> list = tile.getNeighbors();
+		list.add(tile);
+		
+		int relocate = 0;
+		
+		for (Tile t : list)
+			if (t.isMine())
+			{
+				t.toggleMine();
+				relocate++;
+			}
+		
+		while (relocate > 0)
+		{
+			int x = rng.nextInt(getWidth());
+			int y = rng.nextInt(getHeight());
+			Tile t = tiles[x][y];
+			if (t != null && !t.isMine() && !list.contains(t))
+			{
+				t.toggleMine();
+				relocate--;
+			}
+		}
+	}
+	
+	private void setGameState(GameState gameState)
+	{
+		if (this.gameState == gameState)
 			return;
-		this.state = state;
-		switch (state)
+		this.gameState = gameState;
+		switch (gameState)
 		{
 		case INIT:
 			clock.reset();
@@ -338,51 +391,77 @@ public final class Minesweeper
 		}
 	}
 	
-	public final void setNoFlagging(boolean noFlagging)
+	/**
+	 Set <code>noFlagging</code> to <code>true</code> to start a no-flagging game. This method invokes the
+	 <code>newGame</code> if the setting is changed.
+	 
+	 @param noFlagging <code>true</code> to start a no-flagging game
+	 */
+	public void setNoFlagging(boolean noFlagging)
 	{
+		if (this.noFlagging == noFlagging)
+			return;
+		
 		this.noFlagging = noFlagging;
 		newGame();
 	}
 	
 	/**
-	 @return the board width
+	 Returns the width of the board.
+	 
+	 @return the width of the board
 	 */
-	public final int getWidth()
+	public int getWidth()
 	{
 		return tiles.length;
 	}
 	
 	/**
-	 @return the board height
+	 Returns the height of the board.
+	 
+	 @return the height of the board
 	 */
-	public final int getHeight()
+	public int getHeight()
 	{
 		return tiles[0].length;
 	}
 	
 	/**
-	 @return the amount of mines
+	 Returns the amount of mines on the board.
+	 
+	 @return the amount of mines on the board
 	 */
-	public final int getMines()
+	public int getMines()
 	{
 		return mines;
 	}
 	
 	/**
-	 @param x the x position
-	 @param y the y position
+	 Returns the <code>Tile</code> object at the specified coordinates.
 	 
-	 @return the tile at the given position, null if invalid
+	 @param x the x-coordinate of the tile
+	 @param y the y-coordinate of the tile
+	 
+	 @return the <code>Tile</code> object at the specified coordinates, null if the coordinates are invalid
 	 */
 	public Tile getTile(int x, int y)
 	{
-		if (x < 0 || y < 0 || x >= getWidth() || y >= getHeight())
-			return null;
-		return tiles[x][y];
+		return (x < 0 || y < 0 || x >= getWidth() || y >= getHeight()) ? null : tiles[x][y];
+	}
+	
+	private List<Tile> getTiles()
+	{
+		List<Tile> list = new ArrayList<>();
+		for (Tile[] ts : tiles)
+			Collections.addAll(list, ts);
+		ActionListener l;
+		return list;
 	}
 	
 	/**
-	 @return the number of clicks this game so far
+	 Returns the number of clicks on this board.
+	 
+	 @return the number of clicks on this board
 	 */
 	public int getClicks()
 	{
@@ -390,7 +469,9 @@ public final class Minesweeper
 	}
 	
 	/**
-	 @return the number of successful click actions this game so far
+	 Returns the number of actions on this board.
+	 
+	 @return the number of actions on this board
 	 */
 	public int getActions()
 	{
@@ -398,7 +479,9 @@ public final class Minesweeper
 	}
 	
 	/**
-	 @return the current amount of flags on the board
+	 Returns the number of flags on this board.
+	 
+	 @return the number of flags on this board
 	 */
 	public int getFlagsUsed()
 	{
@@ -406,7 +489,49 @@ public final class Minesweeper
 	}
 	
 	/**
-	 @return true if this game is restarted
+	 Returns the current game time in milliseconds.
+	 
+	 @return the current game time in milliseconds
+	 */
+	public long getTime()
+	{
+		return clock.getTime();
+	}
+	
+	/**
+	 Returns the seed used for generating this board's mines.
+	 
+	 @return the seed used for generating this board's mines
+	 */
+	public long getSeed()
+	{
+		return seed;
+	}
+	
+	/**
+	 Returns the current game state.
+	 
+	 @return the current game state
+	 */
+	public GameState getGameState()
+	{
+		return gameState;
+	}
+	
+	/**
+	 Returns the last opened tile that lost the game.
+	 
+	 @return the last opened tile that lost the game, null if the game is <i>not</i>lost
+	 */
+	public Tile getLosingTile()
+	{
+		return losingTile;
+	}
+	
+	/**
+	 Returns <code>true</code> if this board is restarted.
+	 
+	 @return <code>true</code> if this board is restarted
 	 */
 	public boolean isRestarted()
 	{
@@ -419,47 +544,21 @@ public final class Minesweeper
 	}
 	
 	/**
-	 @return true if the game is over, and the player won
+	 Returns <code>true</code> if the game is over, and the player won.
+	 
+	 @return <code>true</code> if the game is over, and the player won
 	 */
-	public boolean isWon()
+	public boolean isGameWon()
 	{
-		return state == GameState.END && losingTile == null;
+		return gameState == GameState.END && losingTile == null;
 	}
 	
 	/**
-	 @return the current game state
+	 Returns the number of openings on this board. This may return an inaccurate value if invoked during the
+	 <code>INIT</code> game state due to the relocation of mines when the game begins.
+	 
+	 @return the number of openings on this board
 	 */
-	public GameState getState()
-	{
-		return state;
-	}
-	
-	/**
-	 @return the opened tile containing a mine
-	 */
-	public Tile getLosingTile()
-	{
-		return losingTile;
-	}
-	
-	/**
-	 @return the current game time in milliseconds
-	 */
-	public long getTime()
-	{
-		return clock.getTime();
-	}
-	
-	/**
-	 @return the seed used for generating the current board's mines
-	 */
-	public long getSeed()
-	{
-		return seed;
-	}
-	
-	// BOARD DATA
-	
 	public int countOpenings()
 	{
 		List<Tile> list = getTiles();
@@ -474,17 +573,26 @@ public final class Minesweeper
 			{
 				Tile t = q.poll();
 				list.remove(t);
-				t.getNeighbors().stream().filter(list::contains).forEach(n ->
-				{
-					list.remove(n);
-					q.offer(n);
-				});
+				t.getNeighbors()
+				 .stream()
+				 .filter(list::contains)
+				 .forEach(n ->
+				 {
+					 list.remove(n);
+					 q.offer(n);
+				 });
 			}
 			i++;
 		}
 		return i;
 	}
 	
+	/**
+	 Returns the 3BV value of this board. This may return an inaccurate value if invoked during the
+	 <code>INIT</code> game state due to the relocation of mines when the game begins.
+	 
+	 @return the 3BV value of this board
+	 */
 	public int count3BV()
 	{
 		List<Tile> list = getTiles();
@@ -505,11 +613,38 @@ public final class Minesweeper
 		return list.size() - shores + countOpenings();
 	}
 	
-	private List<Tile> getTiles()
+	private class Stopwatch
 	{
-		List<Tile> list = new ArrayList<>();
-		for (Tile[] ts : tiles)
-			Collections.addAll(list, ts);
-		return list;
+		private long time;
+		
+		private long timeStart;
+		
+		private boolean running;
+		
+		private void start()
+		{
+			running = true;
+			timeStart = System.currentTimeMillis();
+		}
+		
+		private void stop()
+		{
+			running = false;
+			time += System.currentTimeMillis() - timeStart;
+		}
+		
+		private void reset()
+		{
+			running = false;
+			time = 0;
+		}
+		
+		private long getTime()
+		{
+			if (running)
+				return System.currentTimeMillis() - timeStart + time;
+			return time;
+		}
 	}
+	
 }
