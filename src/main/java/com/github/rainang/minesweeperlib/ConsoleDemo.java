@@ -61,6 +61,7 @@ class ConsoleDemo
 		list.add(new Command("-p", "print board", c -> printBoard()));
 		
 		list.add(new Command("-n", "start new game", c -> newGame()));
+		list.add(new Command("-l", "start new game from seed", c -> newGame(c)));
 		list.add(new Command("-r", "restart game", c -> restartGame()));
 		list.add(new Command("-x", "exit demo", c -> System.exit(0)));
 		
@@ -105,6 +106,20 @@ class ConsoleDemo
 	{
 		ms.newGame();
 		printBoard();
+	}
+	
+	private void newGame(String[] cmd)
+	{
+		if (cmd.length < 2)
+		{
+			newGame();
+			return;
+		}
+		try
+		{
+			ms.newGame(Integer.parseInt(cmd[1]));
+			printBoard();
+		} catch (Exception ignored) {}
 	}
 	
 	private void restartGame()
