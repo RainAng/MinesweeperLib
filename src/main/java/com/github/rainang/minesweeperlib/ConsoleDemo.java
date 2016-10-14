@@ -20,7 +20,8 @@ class ConsoleDemo
 	{
 		if (args.length == 0)
 			return;
-		if (!System.getProperty("os.name").equals("Linux"))
+		if (!System.getProperty("os.name")
+				   .equals("Linux"))
 		{
 			BOMB = "*";
 			FLAG = "F";
@@ -80,7 +81,8 @@ class ConsoleDemo
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		while (true)
 		{
-			String string = br.readLine().toLowerCase();
+			String string = br.readLine()
+							  .toLowerCase();
 			System.out.println();
 			String[] split = string.split(" ");
 			
@@ -124,9 +126,9 @@ class ConsoleDemo
 		int w, h, m;
 		try
 		{
-			w = Math.min(32, Math.max(5, Integer.parseInt(cmd[1])));
-			h = Math.min(32, Math.max(5, Integer.parseInt(cmd[2])));
-			m = Math.min(w * h - 9, Math.max(5, Integer.parseInt(cmd[3])));
+			w = Integer.parseInt(cmd[1]);
+			h = Integer.parseInt(cmd[2]);
+			m = Integer.parseInt(cmd[3]);
 			ms.setDifficulty(w, h, m);
 			printBoard();
 		} catch (ArrayIndexOutOfBoundsException | NumberFormatException e)
@@ -156,10 +158,11 @@ class ConsoleDemo
 			
 			if (flag)
 				ms.flag(x, y);
-			else if (ms.getTile(x, y).isOpen())
-				ms.clear(x, y, true);
+			else if (ms.getTile(x, y)
+					   .isOpen())
+				ms.chord(x, y);
 			else
-				ms.clear(x, y, false);
+				ms.open(x, y);
 			
 			printBoard();
 		} catch (NumberFormatException e)
@@ -334,10 +337,13 @@ class ConsoleDemo
 			StringBuilder sb = new StringBuilder();
 			sb.append("    ");
 			if (command != null)
-				sb.append(command).append(" ");
+				sb.append(command)
+				  .append(" ");
 			if (args != null)
 				for (String arg : args)
-					sb.append("<").append(arg).append("> ");
+					sb.append("<")
+					  .append(arg)
+					  .append("> ");
 			while (sb.length() < WHITE_SPACE.length())
 				sb.append(" ");
 			sb.append(description);
