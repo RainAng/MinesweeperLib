@@ -78,7 +78,7 @@ public final class Minesweeper
 	
 	/**
 	 Sets a custom game difficulty. The minimum board size is <code>5x5</code>, maximum is <code>64x64</code>. Mines
-	 must be less than or equal to 10 less the total amount of tiles. That is, <code>mines <= width * height -
+	 must be less than or equal to 10 less the total amount of tiles. That is, <code>mines &lt;= width * height -
 	 10</code>. Each parameter will be clamped within its respective range.
 	 <p>
 	 Note: This method will invoke the <code>newGame</code> method once the new difficulty has been set.
