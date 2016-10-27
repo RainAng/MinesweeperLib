@@ -1,7 +1,11 @@
 package com.github.rainang.minesweeperlib;
 
-import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
 
 /**
  A Minesweeper board class.
@@ -206,7 +210,6 @@ public final class Minesweeper
 	{
 		return listeners.add(listener);
 	}
-	
 	
 	/**
 	 Removes a game event listener.
@@ -454,7 +457,6 @@ public final class Minesweeper
 		List<Tile> list = new ArrayList<>();
 		for (Tile[] ts : tiles)
 			Collections.addAll(list, ts);
-		ActionListener l;
 		return list;
 	}
 	
